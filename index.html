@@ -1,35 +1,53 @@
-
-            </ul>
-          </div>
-        </div>
-      <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>生徒指導メモアプリ</title>
-  <!-- 必要なツールの読み込み（インターネット経由） -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
-    /* スマホ画面下部の安全領域を確保 */
-    .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-    /* 印刷時の背景色設定 */
+    body {
+      background-color: #f3f4f6;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
     @media print {
-      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body { background-color: white; }
+      .print\:hidden { display: none !important; }
+      .print\:shadow-none { box-shadow: none !important; }
+      .print\:border-none { border: none !important; }
+      .print\:bg-white { background-color: white !important; }
+      .print\:p-0 { padding: 0 !important; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translate(-50%, -20px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    .animate-fade-in-down {
+      animation: fadeInDown 0.3s ease-out forwards;
     }
   </style>
 </head>
-<body class="bg-gray-100">
+<body>
   <div id="root"></div>
 
   <script type="text/babel">
     const { useState, useEffect } = React;
 
     // --- SVG Icons ---
-    const IconEdit = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>;
+    const IconEdit = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>;
     const IconHistory = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
     const IconUsers = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
     const IconCheck = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
@@ -37,6 +55,9 @@
     const IconSearch = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
     const IconPrinter = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>;
     const IconTrash = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>;
+    const IconStar = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
+    const IconStarFilled = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#EAB308" stroke="#EAB308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
+    const IconMinus = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>;
 
     const DEFAULT_CATEGORIES = ['学習', '生活態度', '健康', '交友関係', '保護者連携', 'その他'];
 
@@ -68,14 +89,19 @@
           let parsed = JSON.parse(savedStudents);
           parsed = parsed.map(s => s.classId ? s : { ...s, classId: 'default' });
           setStudents(parsed);
-        } else {
-          setStudents([
-            { id: '1', name: '山田 太郎', gradeClass: '5年2組', classId: 'default' },
-            { id: '2', name: '佐藤 花子', gradeClass: '5年2組', classId: 'default' }
-          ]);
         }
 
-        if (savedRecords) setRecords(JSON.parse(savedRecords));
+        if (savedRecords) {
+          let parsed = JSON.parse(savedRecords);
+          parsed = parsed.map(r => r.studentIds ? r : { ...r, studentIds: r.studentId ? [r.studentId] : [] });
+          // Remove timePeriod if exists from older data
+          parsed = parsed.map(r => {
+            const { timePeriod, ...rest } = r;
+            return rest;
+          });
+          setRecords(parsed);
+        }
+
         if (savedCategories) {
           setCategories(JSON.parse(savedCategories));
         } else {
@@ -83,11 +109,27 @@
         }
       }, []);
 
-      useEffect(() => { localStorage.setItem('guidance_students', JSON.stringify(students)); }, [students]);
-      useEffect(() => { localStorage.setItem('guidance_records', JSON.stringify(records)); }, [records]);
-      useEffect(() => { localStorage.setItem('guidance_categories', JSON.stringify(categories)); }, [categories]);
-      useEffect(() => { if (classes.length > 0) localStorage.setItem('guidance_classes', JSON.stringify(classes)); }, [classes]);
-      useEffect(() => { if (activeClassId) localStorage.setItem('guidance_active_class', activeClassId); }, [activeClassId]);
+      useEffect(() => {
+        if (students.length > 0) localStorage.setItem('guidance_students', JSON.stringify(students));
+      }, [students]);
+
+      useEffect(() => {
+        if (records.length > 0 || localStorage.getItem('guidance_records')) {
+          localStorage.setItem('guidance_records', JSON.stringify(records));
+        }
+      }, [records]);
+
+      useEffect(() => {
+        if (categories.length > 0) localStorage.setItem('guidance_categories', JSON.stringify(categories));
+      }, [categories]);
+
+      useEffect(() => {
+        if (classes.length > 0) localStorage.setItem('guidance_classes', JSON.stringify(classes));
+      }, [classes]);
+
+      useEffect(() => {
+        if (activeClassId) localStorage.setItem('guidance_active_class', activeClassId);
+      }, [activeClassId]);
 
       const showToast = (message) => {
         setToastMessage(message);
@@ -112,7 +154,7 @@
             </header>
 
             {toastMessage && (
-              <div className="fixed top-16 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-50 print:hidden">
+              <div className="absolute top-16 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-50 animate-fade-in-down print:hidden">
                 <IconCheck />
                 <span className="text-sm font-medium">{toastMessage}</span>
               </div>
@@ -133,6 +175,10 @@
                       setCategories([...categories, newCat]);
                       showToast('カテゴリを追加しました');
                     }}
+                    onDeleteCategory={(catToDelete) => {
+                      setCategories(categories.filter(c => c !== catToDelete));
+                      showToast('カテゴリを削除しました');
+                    }}
                   />
                 </div>
               )}
@@ -140,9 +186,17 @@
                 <HistoryTab 
                   records={records} 
                   students={activeStudents} 
+                  categories={categories}
                   onDeleteRecord={(id) => {
                     setRecords(records.filter(r => r.id !== id));
                     showToast('記録を削除しました');
+                  }}
+                  onEditRecord={(id, updatedRecord) => {
+                    setRecords(records.map(r => r.id === id ? { ...r, ...updatedRecord } : r));
+                    showToast('記録を更新しました');
+                  }}
+                  onToggleStar={(id) => {
+                    setRecords(records.map(r => r.id === id ? { ...r, isStarred: !r.isStarred } : r));
                   }}
                 />
               )}
@@ -151,6 +205,7 @@
                   students={activeStudents} 
                   records={records}
                   classes={classes}
+                  categories={categories}
                   activeClassId={activeClassId}
                   onAdd={(newStudent) => {
                     setStudents([...students, newStudent]);
@@ -182,18 +237,44 @@
                     setClasses(classes.map(c => c.id === id ? { ...c, name: newName } : c));
                     showToast('学級名を変更しました');
                   }}
+                  onEditStudent={(id, updatedStudent) => {
+                    setStudents(students.map(s => s.id === id ? { ...s, ...updatedStudent } : s));
+                    showToast('生徒情報を更新しました');
+                  }}
                   onDeleteRecord={(id) => {
                     setRecords(records.filter(r => r.id !== id));
                     showToast('記録を削除しました');
+                  }}
+                  onEditRecord={(id, updatedRecord) => {
+                    setRecords(records.map(r => r.id === id ? { ...r, ...updatedRecord } : r));
+                    showToast('記録を更新しました');
+                  }}
+                  onToggleStar={(id) => {
+                    setRecords(records.map(r => r.id === id ? { ...r, isStarred: !r.isStarred } : r));
                   }}
                 />
               )}
             </main>
 
             <nav className="bg-white border-t border-gray-200 flex justify-around p-2 sticky bottom-0 z-10 pb-safe print:hidden">
-              <NavItem icon={<IconEdit />} label="記録" isActive={activeTab === 'record'} onClick={() => setActiveTab('record')} />
-              <NavItem icon={<IconHistory />} label="履歴" isActive={activeTab === 'history'} onClick={() => setActiveTab('history')} />
-              <NavItem icon={<IconUsers />} label="名簿" isActive={activeTab === 'students'} onClick={() => setActiveTab('students')} />
+              <NavItem 
+                icon={<IconEdit />} 
+                label="記録" 
+                isActive={activeTab === 'record'} 
+                onClick={() => setActiveTab('record')} 
+              />
+              <NavItem 
+                icon={<IconHistory />} 
+                label="履歴" 
+                isActive={activeTab === 'history'} 
+                onClick={() => setActiveTab('history')} 
+              />
+              <NavItem 
+                icon={<IconUsers />} 
+                label="名簿" 
+                isActive={activeTab === 'students'} 
+                onClick={() => setActiveTab('students')} 
+              />
             </nav>
           </div>
         </div>
@@ -201,304 +282,755 @@
     }
 
     // --- Tab Components ---
-    function RecordTab({ students, categories, onSave, onAddCategory }) {
-      const getNowYMDHM = () => {
+
+    function RecordTab({ students, categories, onSave, onAddCategory, onDeleteCategory }) {
+      const getTodayYMD = () => {
         const d = new Date();
         d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-        return d.toISOString().slice(0, 16);
+        return d.toISOString().slice(0, 10);
       };
 
-      const [studentId, setStudentId] = useState('');
+      const [selectedStudentIds, setSelectedStudentIds] = useState([]);
       const [category, setCategory] = useState(categories[0] || '');
       const [incident, setIncident] = useState('');
       const [guidance, setGuidance] = useState('');
       const [others, setOthers] = useState('');
-      const [recordDate, setRecordDate] = useState(getNowYMDHM());
-      const [timePeriod, setTimePeriod] = useState('');
+      const [recordDate, setRecordDate] = useState(getTodayYMD());
       const [searchQuery, setSearchQuery] = useState('');
       const [isAddingCategory, setIsAddingCategory] = useState(false);
+      const [isDeletingCategory, setIsDeletingCategory] = useState(false);
       const [newCategoryName, setNewCategoryName] = useState('');
 
       useEffect(() => {
-        if (categories.length > 0 && !category) setCategory(categories[0]);
+        if (categories.length > 0 && !category) {
+          setCategory(categories[0]);
+        }
       }, [categories]);
 
-      const filteredStudents = students.filter(s => s.name.includes(searchQuery) || s.gradeClass.includes(searchQuery));
+      const filteredStudents = students.filter(s => 
+        s.name.includes(searchQuery) || s.gradeClass.includes(searchQuery)
+      );
+
+      const toggleStudent = (id) => {
+        setSelectedStudentIds(prev => 
+          prev.includes(id) ? prev.filter(sId => sId !== id) : [...prev, id]
+        );
+      };
 
       const handleSave = () => {
-        if (!studentId) return;
+        if (selectedStudentIds.length === 0) return;
         const newRecord = {
           id: Date.now().toString(),
-          studentId, category, incident, guidance, others,
-          date: new Date(recordDate).toISOString(),
-          timePeriod,
+          studentIds: selectedStudentIds,
+          category,
+          incident,
+          guidance,
+          others,
+          date: recordDate,
+          isStarred: false,
         };
         onSave(newRecord);
-        setStudentId(''); setCategory(categories[0] || '');
-        setIncident(''); setGuidance(''); setOthers('');
-        setRecordDate(getNowYMDHM()); setTimePeriod(''); setSearchQuery('');
+        
+        setSelectedStudentIds([]);
+        setCategory(categories[0] || '');
+        setIncident('');
+        setGuidance('');
+        setOthers('');
+        setRecordDate(getTodayYMD());
+        setSearchQuery('');
       };
 
       const handleAddNewCategory = () => {
         if (newCategoryName.trim()) {
           onAddCategory(newCategoryName.trim());
           setCategory(newCategoryName.trim());
-          setNewCategoryName(''); setIsAddingCategory(false);
+          setNewCategoryName('');
+          setIsAddingCategory(false);
         }
       };
 
       return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in">
           <section className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">対象</label>
-            {studentId ? (
-              <div className="flex justify-between items-center bg-blue-50 border border-blue-200 p-3 rounded-lg mb-3">
-                <div>
-                  <span className="text-xs text-blue-600 block">{students.find(s => s.id === studentId)?.gradeClass}</span>
-                  <span className="font-bold text-gray-800">{students.find(s => s.id === studentId)?.name}</span>
-                </div>
-                <button onClick={() => setStudentId('')} className="text-sm text-gray-500 bg-white px-2 py-1 rounded border">変更</button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><IconSearch /></div>
-                  <input type="text" placeholder="名前やクラスで検索..." className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-                </div>
-                <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg divide-y">
-                  {filteredStudents.map(student => (
-                    <button key={student.id} className="w-full text-left p-3 hover:bg-blue-50 flex items-center justify-between" onClick={() => setStudentId(student.id)}>
-                      <span className="font-medium text-gray-800">{student.name}</span>
-                      <span className="text-xs text-gray-500">{student.gradeClass}</span>
-                    </button>
-                  ))}
-                </div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">対象 (複数選択可)</label>
+            
+            {selectedStudentIds.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {selectedStudentIds.map(id => {
+                  const student = students.find(s => s.id === id);
+                  return student ? (
+                    <div key={id} className="flex items-center gap-1 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-full">
+                      <span className="text-xs text-blue-600">{student.gradeClass}</span>
+                      <span className="font-bold text-sm text-gray-800">{student.name}</span>
+                      <button onClick={() => toggleStudent(id)} className="ml-1 text-gray-400 hover:text-gray-700 font-bold">&times;</button>
+                    </div>
+                  ) : null;
+                })}
               </div>
             )}
-          </section>
 
-          <section className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">日時</label>
-              <input type="datetime-local" value={recordDate} onChange={(e) => setRecordDate(e.target.value)} className="w-full p-2 border border-gray-300 rounded-lg" />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">時間帯 <span className="text-xs text-gray-400 font-normal">(任意)</span></label>
-              <select value={timePeriod} onChange={(e) => setTimePeriod(e.target.value)} className="w-full p-2 border border-gray-300 rounded-lg">
-                <option value="">未選択</option>
-                <option value="登校時・朝">登校時・朝</option>
-                <option value="1時間目">1時間目</option>
-                <option value="1・2時間目休み">1時間目休み</option>
-                <option value="2時間目">2時間目</option>
-                <option value="2・3時間目休み">2時間目休み</option>
-                <option value="3時間目">3時間目</option>
-                <option value="3・4時間目休み">3時間目休み</option>
-                <option value="4時間目">4時間目</option>
-                <option value="昼休み">昼休み</option>
-                <option value="5時間目">5時間目</option>
-                <option value="5・6時間目休み">5時間目休み</option>
-                <option value="6時間目">6時間目</option>
-                <option value="清掃・帰り">清掃・帰り</option>
-                <option value="放課後">放課後</option>
-                <option value="その他">その他</option>
-              </select>
+            <div className="space-y-3">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                  <IconSearch />
+                </div>
+                <input 
+                  type="text" 
+                  placeholder="名前やクラスで検索しタップで追加..." 
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg divide-y">
+                {filteredStudents.length > 0 ? filteredStudents.map(student => {
+                  const isSelected = selectedStudentIds.includes(student.id);
+                  return (
+                    <button
+                      key={student.id}
+                      className={`w-full text-left p-3 transition-colors flex items-center justify-between ${isSelected ? 'bg-blue-100' : 'hover:bg-blue-50'}`}
+                      onClick={() => toggleStudent(student.id)}
+                    >
+                      <div>
+                        <span className="font-medium text-gray-800">{student.name}</span>
+                        <span className="text-xs text-gray-500 ml-2">{student.gradeClass}</span>
+                      </div>
+                      {isSelected && <IconCheck />}
+                    </button>
+                  );
+                }) : (
+                  <div className="p-3 text-sm text-gray-500 text-center">見つかりません</div>
+                )}
+              </div>
             </div>
           </section>
 
           <section className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">カテゴリ</label>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">日付</label>
+              <input 
+                type="date" 
+                value={recordDate}
+                onChange={(e) => setRecordDate(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              />
+            </div>
+          </section>
+
+          <section className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-sm font-semibold text-gray-700">カテゴリ</label>
+              <button 
+                onClick={() => setIsDeletingCategory(!isDeletingCategory)} 
+                className={`text-xs px-2 py-1 rounded ${isDeletingCategory ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+              >
+                {isDeletingCategory ? '完了' : '整理'}
+              </button>
+            </div>
             <div className="flex flex-wrap gap-2 items-center">
               {categories.map(cat => (
-                <button key={cat} onClick={() => setCategory(cat)} className={`px-4 py-2 rounded-full text-sm font-medium ${category === cat ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}>{cat}</button>
+                <div key={cat} className="relative inline-block">
+                  <button
+                    onClick={() => isDeletingCategory ? onDeleteCategory(cat) : setCategory(cat)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      isDeletingCategory
+                        ? 'bg-red-50 text-red-500 border border-red-200 pr-8'
+                        : category === cat 
+                          ? 'bg-blue-600 text-white shadow-md' 
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                  {isDeletingCategory && (
+                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none text-red-500">
+                      <IconMinus />
+                    </div>
+                  )}
+                </div>
               ))}
+              
               {isAddingCategory ? (
                 <div className="flex items-center gap-2 p-1 bg-gray-50 rounded-full border border-gray-200">
-                  <input type="text" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="新カテゴリ名" className="px-3 py-1 bg-transparent text-sm w-28" />
+                  <input 
+                    type="text"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    placeholder="新カテゴリ名"
+                    className="px-3 py-1 bg-transparent text-sm w-28 focus:outline-none"
+                    autoFocus
+                  />
                   <button onClick={handleAddNewCategory} className="text-blue-600 text-sm font-bold px-2">追加</button>
                   <button onClick={() => setIsAddingCategory(false)} className="text-gray-500 text-sm pr-2">取消</button>
                 </div>
               ) : (
-                <button onClick={() => setIsAddingCategory(true)} className="px-3 py-2 rounded-full text-sm font-medium border border-dashed border-gray-400 text-gray-500 flex items-center gap-1"><IconPlus /> 追加</button>
+                <button
+                  onClick={() => setIsAddingCategory(true)}
+                  className="px-3 py-2 rounded-full text-sm font-medium border border-dashed border-gray-400 text-gray-500 hover:bg-gray-50 transition-colors flex items-center gap-1"
+                >
+                  <IconPlus /> 追加
+                </button>
               )}
             </div>
           </section>
 
           <section className="space-y-4">
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col">
               <label className="block text-sm font-semibold text-gray-700 mb-2">何があったのか <span className="text-xs text-gray-400 font-normal">(事象・事実)</span></label>
-              <textarea className="w-full h-24 p-3 border border-gray-300 rounded-lg" value={incident} onChange={(e) => setIncident(e.target.value)}></textarea>
+              <textarea
+                className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                placeholder="起きた出来事や事実を入力..."
+                value={incident}
+                onChange={(e) => setIncident(e.target.value)}
+              ></textarea>
             </div>
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col">
               <label className="block text-sm font-semibold text-gray-700 mb-2">どのような指導をしたのか <span className="text-xs text-gray-400 font-normal">(指導内容)</span></label>
-              <textarea className="w-full h-24 p-3 border border-gray-300 rounded-lg" value={guidance} onChange={(e) => setGuidance(e.target.value)}></textarea>
+              <textarea
+                className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                placeholder="生徒への指導や声かけの内容を入力..."
+                value={guidance}
+                onChange={(e) => setGuidance(e.target.value)}
+              ></textarea>
             </div>
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col">
               <label className="block text-sm font-semibold text-gray-700 mb-2">その他 <span className="text-xs text-gray-400 font-normal">(約束等)</span></label>
-              <textarea className="w-full h-20 p-3 border border-gray-300 rounded-lg" value={others} onChange={(e) => setOthers(e.target.value)}></textarea>
+              <textarea
+                className="w-full h-20 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                placeholder="生徒との約束や今後の対応などを入力..."
+                value={others}
+                onChange={(e) => setOthers(e.target.value)}
+              ></textarea>
             </div>
           </section>
 
-          <button onClick={handleSave} disabled={!studentId || (!incident.trim() && !guidance.trim() && !others.trim())} className={`w-full py-4 rounded-xl font-bold text-lg flex justify-center items-center gap-2 ${!studentId || (!incident.trim() && !guidance.trim() && !others.trim()) ? 'bg-gray-300 text-gray-500' : 'bg-blue-600 text-white hover:bg-blue-700'}`}><IconEdit /> 記録を保存する</button>
+          <button
+            onClick={handleSave}
+            disabled={selectedStudentIds.length === 0 || (!incident.trim() && !guidance.trim() && !others.trim())}
+            className={`w-full py-4 rounded-xl font-bold text-lg transition-all flex justify-center items-center gap-2 ${
+              selectedStudentIds.length === 0 || (!incident.trim() && !guidance.trim() && !others.trim())
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95'
+            }`}
+          >
+            <IconEdit />
+            記録を保存する
+          </button>
         </div>
       );
     }
 
-    function HistoryTab({ records, students, onDeleteRecord }) {
+    function HistoryTab({ records, students, categories, onDeleteRecord, onEditRecord, onToggleStar }) {
       const [filter, setFilter] = useState('');
       const [confirmDeleteId, setConfirmDeleteId] = useState(null);
-      const formatDate = (isoString) => {
-        const d = new Date(isoString);
-        return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+      const [editingRecordId, setEditingRecordId] = useState(null);
+      const [editFormData, setEditFormData] = useState({});
+
+      const formatDate = (dateString) => {
+        if (!dateString) return '';
+        if (dateString.length === 10) return dateString.replace(/-/g, '/');
+        const d = new Date(dateString);
+        return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
       };
-      const filteredRecords = records.filter(record => {
-        const student = students.find(s => s.id === record.studentId);
-        if (!student) return false;
+
+      const sortedRecords = [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      const filteredRecords = sortedRecords.filter(record => {
+        const relatedStudents = (record.studentIds || []).map(id => students.find(s => s.id === id)).filter(Boolean);
+        if (relatedStudents.length === 0) return false;
         if (!filter) return true;
-        const searchTarget = `${record.note || ''} ${record.incident || ''} ${record.guidance || ''} ${record.others || ''}`;
-        return student.name.includes(filter) || student.gradeClass.includes(filter) || record.category.includes(filter) || searchTarget.includes(filter);
+        
+        const searchTarget = `${record.incident || ''} ${record.guidance || ''} ${record.others || ''}`;
+        const studentMatch = relatedStudents.some(student => student.name.includes(filter) || student.gradeClass.includes(filter));
+        return studentMatch || record.category.includes(filter) || searchTarget.includes(filter);
       });
 
       return (
-        <div className="space-y-4 print:space-y-2">
+        <div className="space-y-4 animate-fade-in print:space-y-2">
           <div className="flex justify-between items-center print:hidden">
             <h2 className="font-bold text-gray-800">指導履歴一覧</h2>
-            <button onClick={() => window.print()} className="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded-lg text-sm font-medium"><IconPrinter />印刷</button>
+            <button 
+              onClick={() => window.print()}
+              className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            >
+              <IconPrinter />
+              印刷
+            </button>
           </div>
+
           <div className="relative print:hidden">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><IconSearch /></div>
-            <input type="text" placeholder="名前、クラス、内容で検索..." className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg" value={filter} onChange={(e) => setFilter(e.target.value)} />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+              <IconSearch />
+            </div>
+            <input 
+              type="text" 
+              placeholder="名前、クラス、内容で検索..." 
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            />
           </div>
+
           <div className="space-y-3 print:space-y-1">
-            {filteredRecords.map(record => {
-              const student = students.find(s => s.id === record.studentId);
+            {filteredRecords.length > 0 ? filteredRecords.map(record => {
+              const relatedStudents = (record.studentIds || []).map(id => students.find(s => s.id === id)).filter(Boolean);
+              const studentNames = relatedStudents.map(s => s.name).join('、');
+              const studentClasses = [...new Set(relatedStudents.map(s => s.gradeClass))].join('、');
+              
               return (
-                <div key={record.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 print:shadow-none print:border-b print:rounded-none">
+                <div key={record.id} className={`bg-white p-4 rounded-xl shadow-sm border ${record.isStarred ? 'border-yellow-400 bg-yellow-50/30' : 'border-gray-200'} print:shadow-none print:border-b print:rounded-none print:p-2`}>
                   <div className="flex justify-between items-start mb-2">
-                    <div><span className="text-xs text-gray-500">{student?.gradeClass}</span><h3 className="font-bold text-gray-800">{student?.name}</h3></div>
-                    <div className="text-right"><span className="text-xs text-gray-400 block">{formatDate(record.date)}</span>{record.timePeriod && <span className="text-xs text-blue-500 font-medium">{record.timePeriod}</span>}</div>
+                    <div className="flex-1 pr-2">
+                      <span className="text-xs text-gray-500">{studentClasses}</span>
+                      <h3 className="font-bold text-gray-800 leading-tight">{studentNames}</h3>
+                    </div>
+                    <div className="text-right flex flex-col items-end gap-1">
+                      <span className="text-xs text-gray-400 block">{formatDate(record.date)}</span>
+                      <button onClick={() => onToggleStar(record.id)} className="text-gray-400 hover:text-yellow-500 transition-colors print:hidden">
+                        {record.isStarred ? <IconStarFilled /> : <IconStar />}
+                      </button>
+                    </div>
                   </div>
                   <div className="mb-2 flex justify-between items-center">
-                    <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded font-medium">{record.category}</span>
+                    <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded font-medium print:border print:border-blue-300 print:bg-transparent">
+                      {record.category}
+                    </span>
                     <div className="print:hidden">
                       {confirmDeleteId === record.id ? (
                         <div className="flex gap-2">
-                          <button onClick={() => setConfirmDeleteId(null)} className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">ｷｬﾝｾﾙ</button>
-                          <button onClick={() => { onDeleteRecord(record.id); setConfirmDeleteId(null); }} className="text-xs text-white bg-red-500 px-2 py-1 rounded">削除</button>
+                          <button onClick={() => setConfirmDeleteId(null)} className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">キャンセル</button>
+                          <button onClick={() => { onDeleteRecord(record.id); setConfirmDeleteId(null); }} className="text-xs text-white bg-red-500 px-2 py-1 rounded">本当に削除</button>
                         </div>
-                      ) : <button onClick={() => setConfirmDeleteId(record.id)} className="text-gray-400"><IconTrash /></button>}
+                      ) : (
+                        <>
+                          {editingRecordId !== record.id && (
+                            <button onClick={() => {
+                              setEditingRecordId(record.id);
+                              setEditFormData({
+                                date: record.date || '',
+                                category: record.category || categories[0],
+                                incident: record.incident || '',
+                                guidance: record.guidance || '',
+                                others: record.others || ''
+                              });
+                            }} className="text-gray-400 hover:text-blue-500 transition-colors p-1" title="編集">
+                              <IconEdit />
+                            </button>
+                          )}
+                          <button onClick={() => setConfirmDeleteId(record.id)} className="text-gray-400 hover:text-red-500 transition-colors p-1">
+                            <IconTrash />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
-                  <div className="space-y-2 mt-1">
-                    {record.incident && <div><span className="text-[11px] font-bold text-gray-500 block mb-0.5">【事象・事実】</span><p className="text-gray-700 text-sm whitespace-pre-wrap pl-1 border-l-2 border-gray-200">{record.incident}</p></div>}
-                    {record.guidance && <div><span className="text-[11px] font-bold text-gray-500 block mb-0.5">【指導内容】</span><p className="text-gray-700 text-sm whitespace-pre-wrap pl-1 border-l-2 border-blue-200">{record.guidance}</p></div>}
-                    {record.others && <div><span className="text-[11px] font-bold text-gray-500 block mb-0.5">【その他・約束】</span><p className="text-gray-700 text-sm whitespace-pre-wrap pl-1 border-l-2 border-green-200">{record.others}</p></div>}
-                  </div>
+                  
+                  {editingRecordId === record.id ? (
+                    <div className="space-y-2 mt-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                      <div><label className="block text-xs text-gray-500 mb-1">日付</label><input type="date" value={editFormData.date} onChange={(e) => setEditFormData({...editFormData, date: e.target.value})} className="w-full p-2 border border-gray-300 rounded text-sm"/></div>
+                      <div><label className="block text-xs text-gray-500 mb-1">カテゴリ</label><select value={editFormData.category} onChange={(e) => setEditFormData({...editFormData, category: e.target.value})} className="w-full p-2 border border-gray-300 rounded text-sm bg-white">{categories.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+                      <div><label className="block text-xs text-gray-500 mb-1">事象・事実</label><textarea value={editFormData.incident} onChange={(e) => setEditFormData({...editFormData, incident: e.target.value})} className="w-full p-2 border border-gray-300 rounded text-sm h-16 resize-none"/></div>
+                      <div><label className="block text-xs text-gray-500 mb-1">指導内容</label><textarea value={editFormData.guidance} onChange={(e) => setEditFormData({...editFormData, guidance: e.target.value})} className="w-full p-2 border border-gray-300 rounded text-sm h-16 resize-none"/></div>
+                      <div><label className="block text-xs text-gray-500 mb-1">その他・約束</label><textarea value={editFormData.others} onChange={(e) => setEditFormData({...editFormData, others: e.target.value})} className="w-full p-2 border border-gray-300 rounded text-sm h-12 resize-none"/></div>
+                      <div className="flex justify-end gap-2 pt-2">
+                        <button onClick={() => setEditingRecordId(null)} className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium">取消</button>
+                        <button onClick={() => { onEditRecord(record.id, editFormData); setEditingRecordId(null); }} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium">保存</button>
+                      </div>
+                    </div>
+                  ) : (
+                     <div className="space-y-2 mt-1">
+                       {record.incident && (
+                         <div>
+                           <span className="text-[11px] font-bold text-gray-500 block mb-0.5">【事象・事実】</span>
+                           <p className="text-gray-700 text-sm whitespace-pre-wrap pl-1 border-l-2 border-gray-200">{record.incident}</p>
+                         </div>
+                       )}
+                       {record.guidance && (
+                         <div>
+                           <span className="text-[11px] font-bold text-gray-500 block mb-0.5">【指導内容】</span>
+                           <p className="text-gray-700 text-sm whitespace-pre-wrap pl-1 border-l-2 border-blue-200">{record.guidance}</p>
+                         </div>
+                       )}
+                       {record.others && (
+                         <div>
+                           <span className="text-[11px] font-bold text-gray-500 block mb-0.5">【その他・約束】</span>
+                           <p className="text-gray-700 text-sm whitespace-pre-wrap pl-1 border-l-2 border-green-200">{record.others}</p>
+                         </div>
+                       )}
+                     </div>
+                  )}
                 </div>
               );
-            })}
+            }) : (
+              <div className="text-center py-10 text-gray-500">
+                記録がありません
+              </div>
+            )}
           </div>
         </div>
       );
     }
 
-    function StudentsTab({ students, records, classes, activeClassId, onAdd, onDelete, onAddClass, onChangeClass, onDeleteClass, onEditClass, onDeleteRecord }) {
+    function StudentsTab({ students, records, classes, categories, activeClassId, onAdd, onDelete, onAddClass, onChangeClass, onDeleteClass, onEditClass, onEditStudent, onDeleteRecord, onEditRecord, onToggleStar }) {
       const [name, setName] = useState('');
       const [gradeClass, setGradeClass] = useState('');
       const [selectedStudentId, setSelectedStudentId] = useState(null);
       const [newClassName, setNewClassName] = useState('');
       const [isEditingClass, setIsEditingClass] = useState(false);
       const [editingClassName, setEditingClassName] = useState('');
-      const [confirmDeleteClassId, setConfirmDeleteClassId] = useState(null);
       const [confirmDeleteRecordId, setConfirmDeleteRecordId] = useState(null);
+      const [confirmDeleteClassId, setConfirmDeleteClassId] = useState(null);
+
+      const [isEditingStudent, setIsEditingStudent] = useState(false);
+      const [editingStudentData, setEditingStudentData] = useState({ name: '', gradeClass: '', memo: '' });
+      const [editingRecordId, setEditingRecordId] = useState(null);
+      const [editFormData, setEditFormData] = useState({});
 
       if (selectedStudentId) {
         const student = students.find(s => s.id === selectedStudentId);
-        if (!student) { setSelectedStudentId(null); return null; }
-        const studentRecords = records.filter(r => r.studentId === selectedStudentId);
-        const categoryCounts = studentRecords.reduce((acc, r) => { acc[r.category] = (acc[r.category] || 0) + 1; return acc; }, {});
-        const formatDate = (iso) => { const d = new Date(iso); return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`; };
+        if (!student) {
+          setSelectedStudentId(null);
+          return null;
+        }
+
+        const studentRecords = records
+          .filter(r => (r.studentIds || []).includes(selectedStudentId))
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        const categoryCounts = studentRecords.reduce((acc, record) => {
+          acc[record.category] = (acc[record.category] || 0) + 1;
+          return acc;
+        }, {});
+
+        const formatDate = (dateString) => {
+          if (!dateString) return '';
+          if (dateString.length === 10) return dateString.replace(/-/g, '/');
+          const d = new Date(dateString);
+          return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+        };
+
+        const handleSaveStudentEdit = () => {
+          onEditStudent(selectedStudentId, editingStudentData);
+          setIsEditingStudent(false);
+        };
 
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 animate-fade-in">
             <div className="flex justify-between items-center print:hidden mb-2">
-              <button onClick={() => setSelectedStudentId(null)} className="text-blue-600 text-sm font-bold">&larr; 戻る</button>
-              <button onClick={() => window.print()} className="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded-lg text-sm font-medium"><IconPrinter />印刷</button>
+              <button 
+                onClick={() => setSelectedStudentId(null)}
+                className="text-blue-600 text-sm font-bold flex items-center gap-1 hover:bg-blue-50 px-2 py-1 rounded-lg transition-colors"
+              >
+                &larr; 名簿一覧に戻る
+              </button>
+              <button 
+                onClick={() => window.print()}
+                className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+              >
+                <IconPrinter />
+                印刷
+              </button>
             </div>
-            <div className="bg-white p-4 rounded-xl shadow-sm print:shadow-none print:border-b"><div className="text-sm text-gray-500">{student.gradeClass}</div><h2 className="text-xl font-bold text-gray-800">{student.name}</h2></div>
-            <div className="bg-white p-4 rounded-xl shadow-sm print:shadow-none print:border-none">
+            
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 print:shadow-none print:border-b print:rounded-none relative">
+              {isEditingStudent ? (
+                <div className="space-y-2">
+                  <input type="text" value={editingStudentData.gradeClass} onChange={e => setEditingStudentData({...editingStudentData, gradeClass: e.target.value})} className="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="学年・組" />
+                  <input type="text" value={editingStudentData.name} onChange={e => setEditingStudentData({...editingStudentData, name: e.target.value})} className="w-full p-2 border border-gray-300 rounded font-bold focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="氏名" />
+                  <textarea value={editingStudentData.memo || ''} onChange={e => setEditingStudentData({...editingStudentData, memo: e.target.value})} className="w-full p-2 border border-gray-300 rounded text-sm h-24 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="生徒の特記事項やメモ..." />
+                  <div className="flex gap-2 justify-end">
+                    <button onClick={() => setIsEditingStudent(false)} className="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm font-medium">取消</button>
+                    <button onClick={handleSaveStudentEdit} className="px-3 py-1 bg-blue-600 text-white rounded text-sm font-medium">保存</button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="text-sm text-gray-500">{student.gradeClass}</div>
+                      <h2 className="text-xl font-bold text-gray-800">{student.name}</h2>
+                    </div>
+                    <button onClick={() => { setEditingStudentData({ name: student.name, gradeClass: student.gradeClass, memo: student.memo }); setIsEditingStudent(true); }} className="text-gray-400 p-1 print:hidden hover:bg-gray-100 rounded transition-colors" title="生徒情報を編集">
+                      <IconEdit />
+                    </button>
+                  </div>
+                  {student.memo && (
+                    <div className="mt-3 text-sm text-gray-700 bg-yellow-50/50 p-3 rounded-lg border border-yellow-200 whitespace-pre-wrap">
+                      {student.memo}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 print:shadow-none print:border-none print:p-0">
               <h3 className="font-semibold text-gray-800 mb-3 text-sm">カテゴリ別指導回数</h3>
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(categoryCounts).map(([cat, count]) => <span key={cat} className="px-3 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">{cat}: <span className="font-bold">{count}</span></span>)}
-              </div>
+              {Object.keys(categoryCounts).length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(categoryCounts).map(([cat, count]) => (
+                    <span key={cat} className="px-3 py-1 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-200">
+                      {cat}: <span className="font-bold text-sm ml-1">{count}</span>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-xs">記録がありません</p>
+              )}
             </div>
+
             <div className="space-y-3">
-              {studentRecords.map(record => (
-                <div key={record.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 print:shadow-none print:border-b">
-                   <div className="flex justify-between items-start mb-2">
+              <h3 className="font-semibold text-gray-800 text-sm pl-1">指導履歴一覧</h3>
+              {studentRecords.length > 0 ? studentRecords.map(record => (
+                <div key={record.id} className={`bg-white p-4 rounded-xl shadow-sm border ${record.isStarred ? 'border-yellow-400 bg-yellow-50/30' : 'border-gray-200'} print:shadow-none print:border-b print:rounded-none print:px-0`}>
+                  <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded font-medium">{record.category}</span>
+                      <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded font-medium print:border print:border-blue-300 print:bg-transparent">
+                        {record.category}
+                      </span>
                       <div className="print:hidden">
                         {confirmDeleteRecordId === record.id ? (
                           <div className="flex gap-2">
-                            <button onClick={() => setConfirmDeleteRecordId(null)} className="text-[10px] bg-gray-100 px-2 py-1 rounded">ｷｬﾝｾﾙ</button>
+                            <button onClick={() => setConfirmDeleteRecordId(null)} className="text-[10px] text-gray-500 bg-gray-100 px-2 py-1 rounded">キャンセル</button>
                             <button onClick={() => { onDeleteRecord(record.id); setConfirmDeleteRecordId(null); }} className="text-[10px] text-white bg-red-500 px-2 py-1 rounded">削除</button>
                           </div>
-                        ) : <button onClick={() => setConfirmDeleteRecordId(record.id)} className="text-gray-400"><IconTrash /></button>}
+                        ) : (
+                          <>
+                            {editingRecordId !== record.id && (
+                              <button onClick={() => {
+                                setEditingRecordId(record.id);
+                                setEditFormData({
+                                  date: record.date || '',
+                                  category: record.category || categories[0],
+                                  incident: record.incident || '',
+                                  guidance: record.guidance || '',
+                                  others: record.others || ''
+                                });
+                              }} className="text-gray-400 hover:text-blue-500 transition-colors p-1" title="編集">
+                                <IconEdit />
+                              </button>
+                            )}
+                            <button onClick={() => setConfirmDeleteRecordId(record.id)} className="text-gray-400 hover:text-red-500 transition-colors p-1">
+                              <IconTrash />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
-                    <div className="text-right"><span className="text-xs text-gray-400 block">{formatDate(record.date)}</span></div>
+                    <div className="text-right flex flex-col items-end gap-1">
+                      <span className="text-xs text-gray-400 block">{formatDate(record.date)}</span>
+                      <button onClick={() => onToggleStar(record.id)} className="text-gray-400 hover:text-yellow-500 transition-colors print:hidden">
+                        {record.isStarred ? <IconStarFilled /> : <IconStar />}
+                      </button>
+                    </div>
                   </div>
-                  <div className="space-y-2 mt-1">
-                    {record.incident && <div><span className="text-[11px] font-bold text-gray-500 block mb-0.5">【事象・事実】</span><p className="text-gray-700 text-sm whitespace-pre-wrap pl-1 border-l-2 border-gray-200">{record.incident}</p></div>}
-                    {record.guidance && <div><span className="text-[11px] font-bold text-gray-500 block mb-0.5">【指導内容】</span><p className="text-gray-700 text-sm whitespace-pre-wrap pl-1 border-l-2 border-blue-200">{record.guidance}</p></div>}
-                    {record.others && <div><span className="text-[11px] font-bold text-gray-500 block mb-0.5">【その他・約束】</span><p className="text-gray-700 text-sm whitespace-pre-wrap pl-1 border-l-2 border-green-200">{record.others}</p></div>}
-                  </div>
+                  
+                  {editingRecordId === record.id ? (
+                    <div className="space-y-2 mt-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                      <div><label className="block text-xs text-gray-500 mb-1">日付</label><input type="date" value={editFormData.date} onChange={(e) => setEditFormData({...editFormData, date: e.target.value})} className="w-full p-2 border border-gray-300 rounded text-sm"/></div>
+                      <div><label className="block text-xs text-gray-500 mb-1">カテゴリ</label><select value={editFormData.category} onChange={(e) => setEditFormData({...editFormData, category: e.target.value})} className="w-full p-2 border border-gray-300 rounded text-sm bg-white">{categories.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+                      <div><label className="block text-xs text-gray-500 mb-1">事象・事実</label><textarea value={editFormData.incident} onChange={(e) => setEditFormData({...editFormData, incident: e.target.value})} className="w-full p-2 border border-gray-300 rounded text-sm h-16 resize-none"/></div>
+                      <div><label className="block text-xs text-gray-500 mb-1">指導内容</label><textarea value={editFormData.guidance} onChange={(e) => setEditFormData({...editFormData, guidance: e.target.value})} className="w-full p-2 border border-gray-300 rounded text-sm h-16 resize-none"/></div>
+                      <div><label className="block text-xs text-gray-500 mb-1">その他・約束</label><textarea value={editFormData.others} onChange={(e) => setEditFormData({...editFormData, others: e.target.value})} className="w-full p-2 border border-gray-300 rounded text-sm h-12 resize-none"/></div>
+                      <div className="flex justify-end gap-2 pt-2">
+                        <button onClick={() => setEditingRecordId(null)} className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium">取消</button>
+                        <button onClick={() => { onEditRecord(record.id, editFormData); setEditingRecordId(null); }} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium">保存</button>
+                      </div>
+                    </div>
+                  ) : (
+                     <div className="space-y-2 mt-1">
+                       {record.incident && (
+                         <div>
+                           <span className="text-[11px] font-bold text-gray-500 block mb-0.5">【事象・事実】</span>
+                           <p className="text-gray-700 text-sm whitespace-pre-wrap pl-1 border-l-2 border-gray-200">{record.incident}</p>
+                         </div>
+                       )}
+                       {record.guidance && (
+                         <div>
+                           <span className="text-[11px] font-bold text-gray-500 block mb-0.5">【指導内容】</span>
+                           <p className="text-gray-700 text-sm whitespace-pre-wrap pl-1 border-l-2 border-blue-200">{record.guidance}</p>
+                         </div>
+                       )}
+                       {record.others && (
+                         <div>
+                           <span className="text-[11px] font-bold text-gray-500 block mb-0.5">【その他・約束】</span>
+                           <p className="text-gray-700 text-sm whitespace-pre-wrap pl-1 border-l-2 border-green-200">{record.others}</p>
+                         </div>
+                       )}
+                     </div>
+                  )}
                 </div>
-              ))}
+              )) : (
+                <p className="text-sm text-gray-500 pl-1">記録がありません</p>
+              )}
             </div>
           </div>
         );
       }
 
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (name.trim() && gradeClass.trim() && activeClassId) {
+          onAdd({
+            id: Date.now().toString(),
+            name: name.trim(),
+            gradeClass: gradeClass.trim(),
+            classId: activeClassId
+          });
+          setName('');
+          setGradeClass('');
+        }
+      };
+
+      const handleAddClass = () => {
+        if (newClassName.trim()) {
+          onAddClass({
+            id: Date.now().toString(),
+            name: newClassName.trim()
+          });
+          setNewClassName('');
+        }
+      };
+
+      const handleEditClass = () => {
+        if (editingClassName.trim()) {
+          onEditClass(activeClassId, editingClassName.trim());
+          setIsEditingClass(false);
+        }
+      };
+
       const activeClass = classes.find(c => c.id === activeClassId);
 
       return (
-        <div className="space-y-6 print:hidden">
+        <div className="space-y-6 animate-fade-in print:hidden">
           <section className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-3">
-            <h3 className="font-semibold text-gray-800 text-sm">学級・年度の切り替え</h3>
+            <h3 className="font-semibold text-gray-800 text-sm">対象学級・年度の切り替え</h3>
             {isEditingClass ? (
               <div className="flex gap-2">
-                <input type="text" className="flex-1 p-2 border border-gray-300 rounded-lg text-sm" value={editingClassName} onChange={(e) => setEditingClassName(e.target.value)} />
-                <button onClick={() => { onEditClass(activeClassId, editingClassName); setIsEditingClass(false); }} className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold">保存</button>
+                <input 
+                  type="text" 
+                  className="flex-1 p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={editingClassName}
+                  onChange={(e) => setEditingClassName(e.target.value)}
+                  autoFocus
+                />
+                <button onClick={handleEditClass} className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold">保存</button>
+                <button onClick={() => setIsEditingClass(false)} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm">取消</button>
               </div>
             ) : (
               <div className="flex gap-2">
-                <select value={activeClassId} onChange={(e) => { onChangeClass(e.target.value); setSelectedStudentId(null); }} className="flex-1 p-2 border border-gray-300 rounded-lg">
-                  {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                <select 
+                  value={activeClassId}
+                  onChange={(e) => {
+                    onChangeClass(e.target.value);
+                    setSelectedStudentId(null);
+                    setConfirmDeleteClassId(null);
+                  }}
+                  className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-800 font-medium"
+                >
+                  {classes?.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
                 </select>
-                <button onClick={() => { setEditingClassName(activeClass?.name || ''); setIsEditingClass(true); }} className="p-2 text-gray-500"><IconEdit /></button>
+                
+                <button 
+                  onClick={() => {
+                    setEditingClassName(activeClass?.name || '');
+                    setIsEditingClass(true);
+                  }} 
+                  className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="学級名を編集"
+                >
+                  <IconEdit />
+                </button>
+                
+                {confirmDeleteClassId === activeClassId ? (
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => setConfirmDeleteClassId(null)} className="text-xs px-2 py-1 bg-gray-200 rounded">取消</button>
+                    <button onClick={() => { onDeleteClass(activeClassId); setConfirmDeleteClassId(null); }} className="text-xs px-2 py-1 bg-red-500 text-white rounded">削除!</button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => setConfirmDeleteClassId(activeClassId)}
+                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="この学級を削除"
+                  >
+                    <IconTrash />
+                  </button>
+                )}
               </div>
             )}
+            
             <div className="flex gap-2 pt-2 border-t border-gray-100">
-              <input type="text" placeholder="新しい学級名を入力" className="flex-1 p-2 border border-gray-300 rounded-lg text-sm" value={newClassName} onChange={(e) => setNewClassName(e.target.value)} />
-              <button onClick={() => { onAddClass({id: Date.now().toString(), name: newClassName}); setNewClassName(''); }} className="px-3 py-2 bg-gray-800 text-white rounded-lg text-sm font-bold">作成</button>
+              <input 
+                type="text" 
+                placeholder="新しい学級・年度名を入力" 
+                className="flex-1 p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={newClassName}
+                onChange={(e) => setNewClassName(e.target.value)}
+              />
+              <button 
+                onClick={handleAddClass}
+                className="px-3 py-2 bg-gray-800 text-white rounded-lg text-sm font-bold whitespace-nowrap hover:bg-gray-900 transition-colors"
+              >
+                新しく作成
+              </button>
             </div>
           </section>
 
-          <form onSubmit={(e) => { e.preventDefault(); if(name && gradeClass) { onAdd({id: Date.now().toString(), name, gradeClass, classId: activeClassId}); setName(''); setGradeClass(''); } }} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
+          <form onSubmit={handleSubmit} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
             <h3 className="font-semibold text-gray-800 text-sm mb-2">名簿に追加</h3>
-            <div><label className="block text-xs text-gray-500 mb-1">学年・組</label><input type="text" className="w-full p-2 border border-gray-300 rounded-lg" value={gradeClass} onChange={(e) => setGradeClass(e.target.value)} required /></div>
-            <div><label className="block text-xs text-gray-500 mb-1">氏名</label><input type="text" className="w-full p-2 border border-gray-300 rounded-lg" value={name} onChange={(e) => setName(e.target.value)} required /></div>
-            <button type="submit" className="w-full bg-gray-800 text-white py-2 rounded-lg font-medium">追加する</button>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">学年・組</label>
+              <input 
+                type="text" 
+                placeholder="例: 1年1組" 
+                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={gradeClass}
+                onChange={(e) => setGradeClass(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">氏名</label>
+              <input 
+                type="text" 
+                placeholder="例: 山田 太郎" 
+                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+            <button 
+              type="submit"
+              className="w-full bg-gray-800 text-white py-2 rounded-lg font-medium hover:bg-gray-900 transition-colors mt-2"
+            >
+              追加する
+            </button>
           </form>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <h3 className="font-semibold text-gray-800 p-4 border-b bg-gray-50">名簿一覧</h3>
+            <h3 className="font-semibold text-gray-800 p-4 border-b bg-gray-50">名簿一覧 <span className="text-xs text-gray-500 font-normal ml-2">※タップして詳細を表示</span></h3>
             <ul className="divide-y divide-gray-100">
               {students.map(student => (
-                <li key={student.id} className="p-4 flex justify-between items-center cursor-pointer" onClick={() => setSelectedStudentId(student.id)}>
-                  <div><div className="text-xs text-gray-500">{student.gradeClass}</div><div className="font-medium text-gray-800">{student.name}</div></div>
-                  <button onClick={(e) => { e.stopPropagation(); onDelete(student.id); }} className="text-xs text-red-500 px-2 py-1 bg-red-50 rounded">削除</button>
+                <li 
+                  key={student.id} 
+                  className="p-4 flex justify-between items-center hover:bg-blue-50 cursor-pointer transition-colors"
+                  onClick={() => setSelectedStudentId(student.id)}
+                >
+                  <div>
+                    <div className="text-xs text-gray-500">{student.gradeClass}</div>
+                    <div className="font-medium text-gray-800">{student.name}</div>
+                  </div>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(student.id);
+                    }}
+                    className="text-xs text-red-500 hover:bg-red-50 px-2 py-1 rounded transition-colors"
+                  >
+                    削除
+                  </button>
                 </li>
               ))}
             </ul>
@@ -509,8 +1041,16 @@
 
     function NavItem({ icon, label, isActive, onClick }) {
       return (
-        <button onClick={onClick} className={`flex flex-col items-center justify-center w-full py-2 ${isActive ? 'text-blue-600' : 'text-gray-400'}`}>
-          <div>{icon}</div><span className="text-[10px] mt-1 font-medium">{label}</span>
+        <button 
+          onClick={onClick}
+          className={`flex flex-col items-center justify-center w-full py-2 transition-colors ${
+            isActive ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          <div className={`${isActive ? 'scale-110' : ''} transition-transform duration-200`}>
+            {icon}
+          </div>
+          <span className="text-[10px] mt-1 font-medium">{label}</span>
         </button>
       );
     }
