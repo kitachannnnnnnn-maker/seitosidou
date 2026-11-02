@@ -522,6 +522,9 @@
 
     function HistoryTab({ records, students, categories, onDeleteRecord, onEditRecord, onToggleStar }) {
       const [filter, setFilter] = useState('');
+      const [startDate, setStartDate] = useState('');
+      const [endDate, setEndDate] = useState('');
+      const [sortOrder, setSortOrder] = useState('desc');
       const [confirmDeleteId, setConfirmDeleteId] = useState(null);
       const [editingRecordId, setEditingRecordId] = useState(null);
       const [editFormData, setEditFormData] = useState({});
@@ -533,11 +536,19 @@
         return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
       };
 
-      const sortedRecords = [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const sortedRecords = [...records].sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+      });
 
       const filteredRecords = sortedRecords.filter(record => {
         const relatedStudents = (record.studentIds || []).map(id => students.find(s => s.id === id)).filter(Boolean);
         if (relatedStudents.length === 0) return false;
+        
+        if (startDate && record.date < startDate) return false;
+        if (endDate && record.date > endDate) return false;
+
         if (!filter) return true;
         
         const searchTarget = `${record.incident || ''} ${record.guidance || ''} ${record.others || ''}`;
@@ -569,6 +580,22 @@
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
             />
+          </div>
+
+          <div className="flex flex-col gap-2 print:hidden bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-gray-600 font-medium whitespace-nowrap">期間:</span>
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="p-1.5 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 w-full" />
+              <span className="text-gray-400">〜</span>
+              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="p-1.5 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 w-full" />
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-gray-600 font-medium whitespace-nowrap">順序:</span>
+              <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} className="p-1.5 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 w-full bg-white">
+                <option value="desc">日付が新しい順 (降順)</option>
+                <option value="asc">日付が古い順 (昇順)</option>
+              </select>
+            </div>
           </div>
 
           <div className="space-y-3 print:space-y-1">
@@ -685,6 +712,10 @@
       const [editingStudentData, setEditingStudentData] = useState({ name: '', gradeClass: '', memo: '' });
       const [editingRecordId, setEditingRecordId] = useState(null);
       const [editFormData, setEditFormData] = useState({});
+      
+      const [studentStartDate, setStudentStartDate] = useState('');
+      const [studentEndDate, setStudentEndDate] = useState('');
+      const [studentSortOrder, setStudentSortOrder] = useState('desc');
 
       if (selectedStudentId) {
         const student = students.find(s => s.id === selectedStudentId);
@@ -694,8 +725,17 @@
         }
 
         const studentRecords = records
-          .filter(r => (r.studentIds || []).includes(selectedStudentId))
-          .sort((a, b) => new Date(b.date) - new Date(a.date));
+          .filter(r => {
+            if (!(r.studentIds || []).includes(selectedStudentId)) return false;
+            if (studentStartDate && r.date < studentStartDate) return false;
+            if (studentEndDate && r.date > studentEndDate) return false;
+            return true;
+          })
+          .sort((a, b) => {
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            return studentSortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+          });
         
         const categoryCounts = studentRecords.reduce((acc, record) => {
           acc[record.category] = (acc[record.category] || 0) + 1;
@@ -779,6 +819,21 @@
             </div>
 
             <div className="space-y-3">
+              <div className="flex flex-col gap-2 mb-3 bg-gray-50 p-3 rounded-lg border border-gray-200 print:hidden">
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-gray-600 font-medium whitespace-nowrap">期間:</span>
+                  <input type="date" value={studentStartDate} onChange={(e) => setStudentStartDate(e.target.value)} className="p-1 border border-gray-300 rounded w-full" />
+                  <span className="text-gray-400">〜</span>
+                  <input type="date" value={studentEndDate} onChange={(e) => setStudentEndDate(e.target.value)} className="p-1 border border-gray-300 rounded w-full" />
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-gray-600 font-medium whitespace-nowrap">順序:</span>
+                  <select value={studentSortOrder} onChange={(e) => setStudentSortOrder(e.target.value)} className="p-1 border border-gray-300 rounded w-full bg-white">
+                    <option value="desc">新しい順</option>
+                    <option value="asc">古い順</option>
+                  </select>
+                </div>
+              </div>
               <h3 className="font-semibold text-gray-800 text-sm pl-1">指導履歴一覧</h3>
               {studentRecords.length > 0 ? studentRecords.map(record => (
                 <div key={record.id} className={`bg-white p-4 rounded-xl shadow-sm border ${record.isStarred ? 'border-yellow-400 bg-yellow-50/30' : 'border-gray-200'} print:shadow-none print:border-b print:rounded-none print:px-0`}>
